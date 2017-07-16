@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+    <!-- based on gadget by SAN Gear http://gadgets-widgets.googlecode.com/svn/trunk/disqus/ -->
+    <ModulePrefs
+            title="Disqus for Google Sites"
+            title_url="https://github.com/prog-it/google-sites-disqus"
+            description="Add comments provided by Disqus service to your Google Site"
+            directory_title="Disqus for Google Sites"
+            author="Serge Populov, forked by @prog-it GitHub"
+            height="2000"
+            scaling="false"
+            scrolling="true"
+            >
+        <Require feature="dynamic-height"/>
+    </ModulePrefs>
+	
+    <UserPref
+            name="disqus_url_param"
+            datatype="string"
+            display_name="Page URL - used only on thread creation (Strongly recommended)"
+            default_value="http://"/>	
+    <UserPref
+            name="disqus_ttl_param"
+            datatype="string"
+            display_name="Page Title - used only on thread creation (Recommended)"
+            default_value=""/>
+    <UserPref
+            name="disqus_site_param"
+            datatype="string"
+            display_name="Disqus Shortname"
+            default_value="Your site shortname (get at Disqus)"
+            required="true"/>
+    <UserPref
+            name="disqus_id_param"
+            datatype="string"
+            display_name="Disqus ID - unique string, identifying discussion thread, invent yourself (Strongly recommended)"
+            default_value=""/>
+    <UserPref
+            name="disqus_category_id_param"
+            datatype="string"
+            display_name="Category ID - used only on thread creation (optional)"
+            default_value=""/>
+    <UserPref
+            name="only_show_on_main_url"
+            datatype="bool"
+            display_name="Only show on main page URL (see above)"
+            default_value="false"/>
+
+    <Content type="html">
+        <![CDATA[
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+
+        var prefs = new gadgets.Prefs();
+
+        var disqus_shortname = prefs.getString("disqus_site_param");
+        var disqus_url = prefs.getString("disqus_url_param");
+        var disqus_identifier = prefs.getString("disqus_id_param");
+        var disqus_category_id = prefs.getString("disqus_category_id_param");
+        var disqus_title = prefs.getString("disqus_ttl_param");
+
+        var disqusGadget = (function () {
+            function init() {
+                var onlyShowOnMainUrl = prefs.getBool("only_show_on_main_url");
+                var show = true;
+                if (onlyShowOnMainUrl && disqus_url) {
+                    var showOnUrl = disqus_url.toLowerCase().replace(/(http(s)?:\/\/)|([&|\/]$)/ig, "");
+                    var parent = window.location.search.match(/parent=[^&]+/);
+                    if (parent && parent.length > 0) {
+                        var url = parent[0].toLowerCase().replace(/(^parent=)|(http(s)?:\/\/)|([&|\/]$)/ig, "");
+                        if (url != showOnUrl)
+                            show = false;
+                    }
+                }
+
+                if (show) {
+                    injectDisqusScript();
+                    gadgets.util.registerOnLoadHandler(adjustHeight);
+                }
+                else {
+                    var dsqComments = document.getElementById("dsqComments");
+                    dsqComments.parentNode.removeChild(dsqComments);
+                    adjustHeight(0);
+                }
+            }
+
+            function injectDisqusScript() {
+                var dsq = document.createElement('script');
+                dsq.type = 'text/javascript';
+                dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            }
+
+            function adjustHeight(height) {
+                if (gadgets.window)
+                    gadgets.window.adjustHeight(height);
+            }
+
+            return {
+                adjustHeight: adjustHeight,
+                init: init
+            }
+        })();
+
+        function disqus_config() {
+            this.callbacks.onReady = [ disqusGadget.adjustHeight ];
+            this.callbacks.onNewComment = [ disqusGadget.adjustHeight ];
+        }
+
+        gadgets.util.registerOnLoadHandler(disqusGadget.init);
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a id="dsqComments" href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+        ]]>
+    </Content>
+</Module>
